@@ -435,7 +435,7 @@ ${securityNotes}`;
   private renderSection14(proposals: UnverifiedProposal[]): string {
     let annex = `## 13. Anexo B: Propuestas no verificadas
 
-> Sección aislada para sugerencias o completados propuestos por modelos de IA o desarrolladores. Estas propuestas **no están verificadas contra las fuentes** y no deben tratarse como hechos.
+> Sección aislada para sugerencias de arquitectura complementarias o extensiones futuras. Estas propuestas **no están verificadas contra las fuentes** y no deben tratarse como hechos.
 
 | # | Sección de Destino | Propuesta | Justificación / Rationale |
 |---|---|---|---|

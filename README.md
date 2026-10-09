@@ -1,169 +1,191 @@
 # artifact-sdd-extractor-mcp
 
-> **Generador de SDDs (Software Design Documents) con trazabilidad total y cero alucinaciones a partir de artifacts de Claude.**
+> **Motor de Ingeniería Inversa y Generador de Documentos de Diseño de Software (SDD) con Trazabilidad Total Basada en Evidencia.**
 
-Construido bajo el principio rector de **Ingeniería Basada en Evidencia (ECC)**. Cada afirmación, token de estilo, componente o entidad del documento resultante cita de manera auditable e inmutable su fuente exacta:
-- `[SRC-CODE: archivo:línea]` — Hecho extraído del código fuente del artifact.
-- `[SRC-DB: tabla.columna]` — Hecho extraído del esquema de la base de datos conectada.
-- `[SIN FUENTE]` — Marcador obligatorio cuando un dato no existe en ninguna fuente (registrado en el Anexo A de vacíos de información). **El sistema jamás inventa o alucina valores.**
+`artifact-sdd-extractor-mcp` es un servidor MCP (Model Context Protocol) diseñado para analizar código fuente de aplicaciones web (artifacts, dashboards, componentes React/HTML/CSS) e introspeccionar esquemas de bases de datos relacionales (MySQL, SQLite), generando un **Documento de Diseño de Software (SDD)** formal, auditable y agnóstico de stack tecnológico (listo para su implementación en Laravel, Node.js, Python, Go, etc.).
 
 ---
 
-## 🚀 Características Principales
+## 🎯 Propósito y Casos de Uso
 
-1. **Plano de Diseño Determinista**:
-   - Extrae tokens de diseño reales (colores hex/rgb, tipografía, espaciados, radios, sombras, breakpoints) con números de línea exactos vía PostCSS y AST.
-   - Inventario de componentes (botones, tablas, formularios, modales, etc.), props, variantes y estados interactivos (`hover`, `disabled`, etc.).
-   - Análisis de arquitectura de layouts (CSS Grids, Flexbox, media queries y clases responsivas).
-2. **Plano de Datos de Solo Lectura (NFR-3)**:
-   - Introspección de esquema de base de datos relacional (SQLite nativo de Node 22, soporte para scripts `schema.sql`).
-   - `SqlGuard`: Doble barrera de seguridad que valida estrictamente operaciones de solo lectura (`SELECT`, `PRAGMA` read-only) y rechaza cualquier `DROP`, `ALTER`, `TRUNCATE`, `INSERT`, `UPDATE` o `DELETE`.
-3. **Motor SDD de 14 Secciones Fijas**:
-   - Genera especificaciones completas agnósticas de stack (implementables en Laravel, Python, Node.js, Go, etc.).
-   - Diagramas Mermaid automáticos (Arquitectura en capas y Diagrama Entidad-Relación).
-   - Anexo A: Lista numerada de vacíos de información (`[SIN FUENTE]`).
-   - Anexo B: Propuestas no verificadas (sugerencias aisladas de los hechos comprobados).
-4. **Transporte Dual**:
-   - `stdio` para clientes de escritorio (Claude Desktop, Cursor, VS Code).
-   - Streamable `HTTP/SSE` para conexiones remotas.
-5. **Garantía ECC / TDD**:
-   - Suite de pruebas con Vitest superando el 80% de cobertura.
-   - Determinismo estricto (mismo input produce el mismo documento byte por byte).
+Cuando se construyen prototipos interactivos o artifacts de aplicaciones web, estos contienen decisiones visuales, lógica de negocio y estructuras de datos funcionales, pero carecen de una especificación técnica formal descargable para el equipo de desarrollo. 
+
+Este proyecto resuelve ese vacío operativo:
+1. **Reconstrucción 1:1 de Dashboards y Paneles Web**: Extrae la jerarquía de vistas, tarjetas de métricas (KPIs), gráficos estadísticos, filtros y tablas, vinculándolos directamente con las tablas y columnas de la base de datos (**MySQL** / **SQLite**).
+2. **Extracción Determinista de Design Tokens**: Analiza hojas de estilo y clases mediante AST (PostCSS) para inventariar la paleta de colores, tipografías, espaciados, bordes redondeados, sombras y breakpoints responsivos.
+3. **Especificación Agnóstica de Stack**: Produce un documento técnico estandarizado que permite a cualquier equipo de ingeniería programar la solución en su framework habitual sin depender del código fuente original.
+4. **Gobierno y Permisos Controlados**: Opera bajo autorización explícita antes de realizar exportaciones al sistema de archivos local.
 
 ---
 
-## 🛠️ Herramientas MCP (Tools)
+## 🔬 Principio Rector: Ingeniería Basada en Evidencia (ECC)
 
-| Herramienta | Entrada | Salida | Descripción |
+El motor opera bajo una regla de trazabilidad estricta: **ninguna afirmación técnica carece de origen verificado**.
+
+Cada elemento documentado incluye su identificador de evidencia:
+- `[SRC-CODE: archivo:línea]` — Dato extraído de forma determinista del código fuente (estilo, prop, evento, estado).
+- `[SRC-DB: tabla.columna]` — Dato extraído de la introspección del esquema de datos (tipo, clave primaria, relación foránea).
+- `[SIN FUENTE]` — Marcador obligatorio cuando un dato no existe en ninguna fuente analizada. El sistema **jamás infiere o supone valores**: deja el marcador y lo traslada al **Anexo A (Vacíos de Información)** para su definición con los responsables del proyecto.
+
+---
+
+## 🏗️ Arquitectura Técnica
+
+```
+artifact-sdd-extractor-mcp
+ ├── src/
+ │    ├── parser/
+ │    │    ├── css-parser.ts        # Extractor AST (PostCSS) de design tokens con línea exacta
+ │    │    ├── component-parser.ts  # Inventario de componentes, props, variantes, KPIs y charts
+ │    │    └── layout-parser.ts     # Grids, Flexbox, media queries y comportamiento responsivo
+ │    ├── db/
+ │    │    ├── client.ts            # Conexión MySQL / SQLite e introspección de esquema
+ │    │    └── guard.ts             # SqlGuard (Filtro estricto de solo lectura: SELECT / PRAGMA)
+ │    ├── sdd/
+ │    │    ├── engine.ts            # Motor determinista con plantilla fija de 14 secciones
+ │    │    └── anti-hallucination.ts# Validador de cobertura de fuentes y auditor de vacíos
+ │    ├── server.ts                 # Servidor MCP (Tools y Resources según especificación)
+ │    └── index.ts                  # CLI ejecutable con soporte stdio y streamable HTTP/SSE
+ ├── scripts/
+ │    └── install-claude.js         # Instalador automatizado para entornos Claude Desktop
+ └── test/                          # Batería de pruebas automatizadas (>80% cobertura)
+```
+
+---
+
+## 🛠️ Herramientas MCP Disponibles
+
+| Herramienta | Entradas | Salida | Función |
 |---|---|---|---|
-| `ingest_artifact_source` | `artifact_id`, `code` o `files[]` | Resumen + Hash SHA-256 | Valida, versiona y almacena el código fuente del artifact |
-| `parse_design_tokens` | `artifact_id` | `tokens[]` | Extrae tokens con `[SRC-CODE: file:line]` |
-| `extract_component_inventory` | `artifact_id` | `components[]` | Inventario de componentes, props, variantes y estados |
-| `extract_layout` | `artifact_id`, `screen?` | `layout` | Layouts, grids, flexbox y breakpoints detectados |
-| `extract_data_model` | `artifact_id`, `schema_sql?`, `db_dsn?` | `entities[]`, `relationships[]` | Introspección del esquema de datos con `[SRC-DB]` |
-| `generate_sdd` | `artifact_id`, `title?`, `version?`, `strict?` | Markdown | Renderiza el SDD completo bajo la plantilla fija |
-| `export_sdd` | `artifact_id`, `destination?`, `filename?` | Ruta o contenido | Exporta el SDD a un archivo (`EXPORT_DIR`) o lo devuelve inline |
+| `ingest_artifact_source` | `artifact_id`, `code` o `files[]` | Resumen técnico + Hash SHA-256 | Valida, versiona y almacena el código fuente en memoria |
+| `parse_design_tokens` | `artifact_id` | `tokens[]` | Extrae colores, tipografía, espaciado y media queries con `[SRC-CODE]` |
+| `extract_component_inventory` | `artifact_id` | `components[]` | Inventario de componentes (botones, tablas, KPIs, gráficos, modales) |
+| `extract_layout` | `artifact_id`, `screen?` | `layout` | Mapeo de sistemas Grid, Flexbox y adaptación responsiva |
+| `extract_data_model` | `artifact_id`, `schema_sql?`, `db_dsn?` | `entities[]`, `relationships[]` | Introspección del esquema relacional (MySQL / SQLite) con `[SRC-DB]` |
+| `generate_sdd` | `artifact_id`, `title?`, `version?`, `strict?` | Markdown | Renderiza el SDD con 14 secciones fijas y diagramas Mermaid |
+| `export_sdd` | `artifact_id`, `destination?`, `filename?` | Ruta de archivo o inline | Guarda el SDD en el directorio configurado (`EXPORT_DIR`) |
 
 ### Recursos MCP (Resources)
-
-- `artifact://{id}/spec`: Devuelve el documento SDD Markdown generado para el artifact.
-- `artifact://{id}/tokens`: Devuelve los design tokens extraídos en formato JSON.
+- `artifact://{id}/spec`: Retorna el documento SDD Markdown generado.
+- `artifact://{id}/tokens`: Retorna la especificación estructurada de design tokens en formato JSON.
 
 ---
 
-## 📦 Instalación y Configuración
+## 🚀 Instalación y Puesta en Marcha
 
 ### Requisitos
 - Node.js 20+ (recomendado Node 22+)
 - npm
 
-### 1. Compilación local
+### 1. Clonar y Compilar
 ```bash
+git clone git@github.com:zerocool-network/artifact-sdd-extractor-mcp.git
+cd artifact-sdd-extractor-mcp
 npm install
 npm run build
 ```
 
-### 2. Configuración en Claude Desktop
-Añadir la siguiente entrada en `claude_desktop_config.json`:
+### 2. Instalación Automática en Claude Desktop
+Para registrar automáticamente el servidor en la configuración de Claude Desktop en tu equipo (Mac o Windows):
+```bash
+npm run install:claude
+```
+El script detectará tu sistema operativo, creará una copia de respaldo de tu archivo de configuración y registrará `artifact-sdd-extractor` sin alterar tus otros servidores MCP.
 
-#### Opción A: Conexión con base de datos MySQL en vivo
+Una vez ejecutado, reinicia Claude Desktop (`Cmd+Q` en Mac / `Alt+F4` en Windows).
+
+---
+
+## ⚙️ Configuración de Base de Datos y Entorno
+
+Puedes configurar el comportamiento del servidor mediante variables de entorno en el archivo de configuración de Claude Desktop (`claude_desktop_config.json`):
+
+### Conexión a Base de Datos MySQL
 ```json
 {
   "mcpServers": {
     "artifact-sdd-extractor": {
       "command": "node",
       "args": [
-        "/Volumes/CORSAIR/Proyectos/mcp-artifacts/dist/index.js"
+        "/ruta/al/proyecto/artifact-sdd-extractor-mcp/dist/index.js"
       ],
       "env": {
-        "DB_DSN": "mysql://usuario:password@127.0.0.1:3306/mi_base_de_datos",
-        "EXPORT_DIR": "/Volumes/CORSAIR/Proyectos/mcp-artifacts/exports"
+        "DB_DSN": "mysql://usuario:password@127.0.0.1:3306/nombre_base_de_datos",
+        "EXPORT_DIR": "/ruta/al/proyecto/artifact-sdd-extractor-mcp/exports"
       }
     }
   }
 }
 ```
 
-#### Opción B: Conexión con SQLite o scripts DDL MySQL (schema.sql)
+### Conexión a Base de Datos SQLite o Scripts DDL
 ```json
 {
   "mcpServers": {
     "artifact-sdd-extractor": {
       "command": "node",
       "args": [
-        "/Volumes/CORSAIR/Proyectos/mcp-artifacts/dist/index.js"
+        "/ruta/al/proyecto/artifact-sdd-extractor-mcp/dist/index.js"
       ],
       "env": {
-        "DB_DSN": "sqlite:///ruta/a/tu/base_de_datos.sqlite",
-        "EXPORT_DIR": "/Volumes/CORSAIR/Proyectos/mcp-artifacts/exports"
+        "DB_DSN": "sqlite:///ruta/a/tu/base_datos.sqlite",
+        "EXPORT_DIR": "/ruta/al/proyecto/artifact-sdd-extractor-mcp/exports"
       }
     }
   }
 }
 ```
 
-### 3. Configuración en Cursor / VS Code
-Añadir en el archivo de configuración de MCP:
-```json
-{
-  "mcpServers": {
-    "artifact-sdd-extractor": {
-      "command": "node",
-      "args": ["/Volumes/CORSAIR/Proyectos/mcp-artifacts/dist/index.js"]
-    }
-  }
-}
-```
+---
+
+## 💻 Guía de Uso del Flujo de Trabajo
+
+### Uso Directo en el Cliente MCP (Claude Desktop)
+Al interactuar con un artifact o vista en tu cliente MCP, solicita la extracción de forma natural:
+
+> **Instrucción de ejemplo:**  
+> *"Genera el SDD completo del artifact actual sin omitir su lógica de negocio, comportamiento interactivo, componentes visuales ni modelo de datos de MySQL. Solicita confirmación antes de guardar el archivo en disco."*
+
+El cliente MCP:
+1. Recupera el código fuente de la vista actual y lo remite a `ingest_artifact_source`.
+2. Si la vista interactúa con una base de datos relacional, introspecciona el esquema de MySQL.
+3. Extrae la paleta visual, componentes (KPIs, gráficas, formularios) y sus estados interactivos.
+4. Ensambla el SDD completo y te solicita confirmación antes de ejecutar `export_sdd`.
+
+Para consultar la guía detallada de integración, consulta el documento:  
+👉 **[Guía de Uso y Casos de Integración](docs/GUIA_DE_USO.md)**
 
 ---
 
-## 💻 Flujo de Trabajo Típico
+## 🔒 Seguridad y Control de Acceso
 
-1. **Ingesta del artifact copiado de Claude**:
-   ```json
-   {
-     "artifact_id": "crm-app",
-     "files": [
-       { "path": "styles.css", "content": "..." },
-       { "path": "App.tsx", "content": "..." },
-       { "path": "schema.sql", "content": "..." }
-     ]
-   }
-   ```
-2. **Inspección de tokens y componentes**:
-   Llamar a `parse_design_tokens` o `extract_component_inventory` para auditar los hechos extraídos.
-3. **Generación del SDD**:
-   Llamar a `generate_sdd` con `strict: true` para verificar la conformidad con la regla de cero alucinaciones.
-4. **Exportación**:
-   Llamar a `export_sdd` para generar el archivo Markdown en `exports/crm-app-SDD.md`.
+1. **Permisos Interactivos (Human-in-the-Loop)**: Cualquier operación de escritura en disco mediante `export_sdd` requiere aprobación explícita en la interfaz del cliente.
+2. **Garantía Read-Only en Base de Datos (NFR-3)**: El módulo `SqlGuard` inspecciona cada sentencia SQL antes de su ejecución. Solo se autorizan consultas de inspección de esquema (`SELECT`, `PRAGMA` de solo lectura). Cualquier intento de `DROP`, `ALTER`, `TRUNCATE`, `INSERT`, `UPDATE` o `DELETE` es bloqueado con una excepción de seguridad `QUERY_REJECTED`.
+3. **Aislamiento de Transporte**: Todo mensaje de registro interno se dirige exclusivamente a `stderr`, manteniendo el flujo `stdout` reservado de forma pura para el protocolo JSON-RPC de MCP.
 
 ---
 
-## 📖 Documentación Adicional y Prompts para Agentes
+## 🧪 Pruebas Automatizadas y Calidad de Código
 
-Para consultar una guía detallada con plantillas de prompts listas para copiar y pegar en Claude, Cursor o cualquier asistente, consulta:
-👉 **[Guía de Uso y Prompts para Agentes](docs/GUIA_DE_USO_Y_PROMPTS.md)**
-
----
-
-## 🧪 Pruebas y Cobertura (TDD)
+El proyecto sigue una metodología de desarrollo dirigida por pruebas (TDD) implementada con **Vitest**:
 
 ```bash
 # Ejecutar todas las pruebas unitarias y de integración
 npm test
 
-# Ejecutar reporte de cobertura
+# Ejecutar auditoría de cobertura de código
 npm run test:coverage
 ```
 
-Las pruebas incluyen:
-- Pruebas unitarias de parsers CSS y JSX con validación de líneas de código exactas.
-- Pruebas de seguridad `SqlGuard` (bloqueo de DDL/DML e inyecciones multicomando).
-- Pruebas del validador anti-alucinación y auditoría de vacíos de información.
-- **Golden E2E Test**: flujo completo de ingesta, introspección SQLite, renderizado determinista de 14 secciones y exportación a disco con 100% de cumplimiento de evidencia.
+### Cobertura de Pruebas
+- **Pruebas de Lexer y Parser AST**: Validación de extracción de tokens con líneas de código verificables.
+- **Pruebas de Componentes de Dashboard**: Detección de tarjetas KPI, gráficos de ingresos y estados de formulario.
+- **Pruebas de Introspección MySQL y SQLite**: Validación de claves foráneas y tipos de datos relacionales.
+- **Pruebas de Seguridad `SqlGuard`**: Verificación de rechazo de sentencias DDL y DML.
+- **Prueba Golden E2E**: Flujo completo de ingesta, renderizado determinista de las 14 secciones del SDD y verificación del 100% de cumplimiento de citas de evidencia.
 
 ---
 
 ## 📄 Licencia
 
-MIT
+MIT License — Desarrollado para la infraestructura de ingeniería de **ZeroCool Network**.
