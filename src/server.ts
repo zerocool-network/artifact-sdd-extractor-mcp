@@ -183,15 +183,20 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
   // Tool 5: extract_data_model
   server.tool(
     'extract_data_model',
-    'Introspecciona el esquema de base de datos (entidades, tipos, columnas, relaciones) en modo solo lectura con evidencia [SRC-DB].',
+    'Introspecciona el modelo de datos (entidades, tipos, columnas, relaciones) a partir de los datos pasados por el cliente, archivo DDL o interfaces del código.',
     {
       artifact_id: z.string().describe('Identificador del artifact'),
-      schema_sql: z.string().optional().describe('Sentencias DDL SQL para cargar esquema en memoria (opcional)'),
-      db_dsn: z.string().optional().describe('Cadena de conexión de la base de datos (opcional si DB_DSN está en env)'),
+      entities: z.array(z.any()).optional().describe('Entidades y columnas ya obtenidas por el cliente (ej: vía Tabularis)'),
+      schema_sql: z.string().optional().describe('Sentencias DDL SQL opcionales'),
+      db_dsn: z.string().optional().describe('Cadena opcional de conexión si se desea introspección directa'),
     },
-    async ({ artifact_id, schema_sql, db_dsn }) => {
+    async ({ artifact_id, entities, schema_sql, db_dsn }) => {
       try {
-        const dataModel = await service.extractDataModel(artifact_id, { schemaSql: schema_sql, dbDsn: db_dsn });
+        const dataModel = await service.extractDataModel(artifact_id, {
+          entities,
+          schemaSql: schema_sql,
+          dbDsn: db_dsn,
+        });
         return {
           content: [
             {
@@ -229,15 +234,17 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
       title: z.string().optional().describe('Título personalizado para el SDD'),
       version: z.string().optional().describe('Versión del documento (ej: "1.0.0")'),
       author: z.string().optional().describe('Nombre del autor o equipo'),
+      entities: z.array(z.any()).optional().describe('Entidades de base de datos ya conocidas por el cliente (ej: de Tabularis) para incluir en el SDD'),
       strict: z.boolean().optional().describe('Si es true, valida estrictamente que no existan tablas técnicas sin evidencia'),
     },
-    async ({ artifact_id, title, version, author, strict }) => {
+    async ({ artifact_id, title, version, author, entities, strict }) => {
       try {
         const sdd = await service.generateSdd({
           artifactId: artifact_id,
           title,
           version,
           author,
+          entities,
           strict,
         });
 

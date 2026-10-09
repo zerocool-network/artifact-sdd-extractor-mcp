@@ -134,4 +134,40 @@ export default function DashboardApp() {
     expect(client.hasConnection()).toBe(true);
     client.close();
   });
+
+  it('debe extraer el modelo de datos de las interfaces TypeScript del código sin requerir ninguna conexión de BD', async () => {
+    const service = new ArtifactSddService(new ArtifactStore());
+    const artifactId = 'dashboard-no-db';
+
+    const ARTIFACT_WITH_INTERFACES = `
+      interface Customer {
+        id: number;
+        name: string;
+        email: string;
+        country: string;
+      }
+
+      interface Order {
+        id: number;
+        customerId: number;
+        amount: number;
+        status: string;
+      }
+
+      export default function App() {
+        return <div>Test</div>;
+      }
+    `;
+
+    service.ingestArtifact(artifactId, ARTIFACT_WITH_INTERFACES);
+    const dataModel = await service.extractDataModel(artifactId);
+
+    expect(dataModel.entities.length).toBe(2);
+    expect(dataModel.entities.some(e => e.table === 'customer')).toBe(true);
+    expect(dataModel.entities.some(e => e.table === 'order')).toBe(true);
+
+    const customer = dataModel.entities.find(e => e.table === 'customer');
+    expect(customer?.columns.some(c => c.name === 'email')).toBe(true);
+    expect(customer?.columns.find(c => c.name === 'email')?.evidence).toBe('[SRC-DB: customer.email]');
+  });
 });

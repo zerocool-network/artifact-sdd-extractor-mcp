@@ -96,40 +96,25 @@ Una vez ejecutado, reinicia Claude Desktop (`Cmd+Q` en Mac / `Alt+F4` en Windows
 
 ---
 
-## ⚙️ Configuración de Base de Datos y Entorno
+## ⚙️ Cero Configuración de Base de Datos
 
-Puedes configurar el comportamiento del servidor mediante variables de entorno en el archivo de configuración de Claude Desktop (`claude_desktop_config.json`):
+`artifact-sdd-extractor-mcp` **NO requiere configurar credenciales, usuarios ni contraseñas de bases de datos**.
 
-### Conexión a Base de Datos MySQL
+Claude Desktop ya dispone de acceso a tus datos a través de tus herramientas habituales (como Tabularis u otros MCPs de bases de datos que ya tengas instalados):
+- **Integración transparente**: Claude consulta el esquema con Tabularis y lo incorpora automáticamente en el SDD.
+- **Extracción desde código**: Si no se consulta ninguna base de datos, el motor extrae las entidades de datos directamente de las interfaces y modelos de TypeScript del propio artifact.
+- **Instalación limpia**: Solo registras el ejecutable en `claude_desktop_config.json`, sin contraseñas ni variables de conexión:
+
 ```json
 {
   "mcpServers": {
     "artifact-sdd-extractor": {
       "command": "node",
       "args": [
-        "/ruta/al/proyecto/artifact-sdd-extractor-mcp/dist/index.js"
+        "/Volumes/CORSAIR/Proyectos/mcp-artifacts/dist/index.js"
       ],
       "env": {
-        "DB_DSN": "mysql://usuario:password@127.0.0.1:3306/nombre_base_de_datos",
-        "EXPORT_DIR": "/ruta/al/proyecto/artifact-sdd-extractor-mcp/exports"
-      }
-    }
-  }
-}
-```
-
-### Conexión a Base de Datos SQLite o Scripts DDL
-```json
-{
-  "mcpServers": {
-    "artifact-sdd-extractor": {
-      "command": "node",
-      "args": [
-        "/ruta/al/proyecto/artifact-sdd-extractor-mcp/dist/index.js"
-      ],
-      "env": {
-        "DB_DSN": "sqlite:///ruta/a/tu/base_datos.sqlite",
-        "EXPORT_DIR": "/ruta/al/proyecto/artifact-sdd-extractor-mcp/exports"
+        "EXPORT_DIR": "/Volumes/CORSAIR/Proyectos/mcp-artifacts/exports"
       }
     }
   }

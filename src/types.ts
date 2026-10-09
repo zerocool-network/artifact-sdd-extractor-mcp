@@ -147,6 +147,8 @@ export interface SDDGenerationOptions {
   title?: string;
   version?: string;
   author?: string;
+  dataModel?: DataModel;
+  entities?: DataEntity[];
   proposals?: UnverifiedProposal[];
   strict?: boolean;
 }
