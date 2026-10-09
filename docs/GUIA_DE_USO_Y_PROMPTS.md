@@ -42,28 +42,31 @@ Esta guía explica paso a paso cómo interactuar con un agente de IA (en Claude 
 
 ---
 
-### Caso 2: Artifact con diseño + Esquema de Base de Datos (`schema.sql`)
+### Caso 2: Artifact de Dashboard / Analítica con Base de Datos MySQL
 
-Si además del código de la interfaz tienes la base de datos o el script DDL de creación de tablas:
+Muchos artifacts de Claude son paneles de control, dashboards con tarjetas KPI (`StatCard`, `MetricCard`), gráficos de barras o líneas, y tablas de pedidos/clientes alimentadas por una base de datos **MySQL**.
+
+Para generar el SDD uniendo las métricas del dashboard con tus tablas de MySQL:
 
 > **Prompt para el agente:**
 >
-> *"Quiero generar el SDD completo para este sistema conectando el plano de diseño y el plano de datos:*
-> 1. *Llama a `ingest_artifact_source` con `artifact_id: "sistema-ventas"` pasando dos archivos:*
->    - `App.tsx`: el código del artifact.
->    - `schema.sql`: las sentencias de base de datos.
-> 2. *Inspecciona el modelo con `extract_data_model`.*
-> 3. *Genera el SDD con `generate_sdd` incluyendo el diagrama Mermaid de base de datos.*
-> 4. *Exporta el resultado a disco con `export_sdd(artifact_id="sistema-ventas", filename="sistema-ventas-SDD.md")`.*
+> *"Tengo este artifact que pinta un Dashboard interactivo (gráficos, tarjetas KPI, métricas y tablas) y quiero generar su SDD completo con trazabilidad a mi base de datos MySQL:*
+> 1. *Usa `ingest_artifact_source` con `artifact_id: "ventas-dashboard"` enviando el código del dashboard (`Dashboard.tsx`) y el esquema MySQL (`schema.sql`).*
+> 2. *Inspecciona los componentes de dashboard (KPIs y Gráficos) con `extract_component_inventory`.*
+> 3. *Ejecuta `extract_data_model` para introspeccionar las tablas de MySQL (clientes, pedidos, métricas).*
+> 4. *Genera el SDD con `generate_sdd(strict=true)` para que trace cada tarjeta y gráfico a su tabla de MySQL con `[SRC-DB]` y cada estilo a `[SRC-CODE]`.*
+> 5. *Llama a `export_sdd` para guardarlo en disco en `exports/ventas-dashboard-SDD.md`.*
 >
-> *Archivo 1: `App.tsx`:*
+> *(Nota: Si tienes la base de datos MySQL activa en tu máquina o servidor, puedes configurar `DB_DSN="mysql://usuario:password@localhost:3306/nombre_bd"` y el servidor extraerá automáticamente el esquema de MySQL en vivo).*
+>
+> *Archivo 1 (`Dashboard.tsx`):*
 > ```tsx
-> [CÓDIGO DE REACT/HTML/CSS]
+> [CÓDIGO DEL DASHBOARD DEL ARTIFACT]
 > ```
 >
-> *Archivo 2: `schema.sql`:*
+> *Archivo 2 (`schema.sql` - Dump DDL de MySQL):*
 > ```sql
-> [SENTENCIAS CREATE TABLE / DDL]
+> [SENTENCIAS DDL MYSQL: CREATE TABLE `pedidos` (...) ENGINE=InnoDB;]
 > ```*"
 
 ---

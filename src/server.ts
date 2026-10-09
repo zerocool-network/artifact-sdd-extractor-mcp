@@ -191,7 +191,7 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
     },
     async ({ artifact_id, schema_sql, db_dsn }) => {
       try {
-        const dataModel = service.extractDataModel(artifact_id, { schemaSql: schema_sql, dbDsn: db_dsn });
+        const dataModel = await service.extractDataModel(artifact_id, { schemaSql: schema_sql, dbDsn: db_dsn });
         return {
           content: [
             {
@@ -233,7 +233,7 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
     },
     async ({ artifact_id, title, version, author, strict }) => {
       try {
-        const sdd = service.generateSdd({
+        const sdd = await service.generateSdd({
           artifactId: artifact_id,
           title,
           version,
@@ -270,7 +270,7 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
     },
     async ({ artifact_id, destination, filename }) => {
       try {
-        const result = service.exportSdd(artifact_id, destination || 'file', filename);
+        const result = await service.exportSdd(artifact_id, destination || 'file', filename);
         return {
           content: [
             {
@@ -297,7 +297,7 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
       const artifactId = String(id);
       let sdd = service.getGeneratedSdd(artifactId);
       if (!sdd && service.getArtifact(artifactId)) {
-        sdd = service.generateSdd({ artifactId });
+        sdd = await service.generateSdd({ artifactId });
       }
 
       if (!sdd) {

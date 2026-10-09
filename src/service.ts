@@ -69,7 +69,7 @@ export class ArtifactSddService {
     return client;
   }
 
-  extractDataModel(artifactId: string, options?: { schemaSql?: string; dbDsn?: string }): DataModel {
+  async extractDataModel(artifactId: string, options?: { schemaSql?: string; dbDsn?: string }): Promise<DataModel> {
     // If schema.sql was ingested inside the artifact files, load it automatically into db
     if (this.store.hasArtifact(artifactId)) {
       const files = this.store.getSource(artifactId);
@@ -79,17 +79,25 @@ export class ArtifactSddService {
       }
     }
 
+    // Check if offline MySQL DDL is provided
+    if (options?.schemaSql && (options.schemaSql.includes('ENGINE=') || options.schemaSql.includes('AUTO_INCREMENT'))) {
+      const parsed = DbIntrospector.parseMysqlDdl(options.schemaSql);
+      if (parsed.entities.length > 0) {
+        return parsed;
+      }
+    }
+
     const client = this.getOrCreateDbClient(artifactId, options?.dbDsn, options?.schemaSql);
     const introspector = new DbIntrospector(client);
-    return introspector.introspectSchema();
+    return await introspector.introspectSchema();
   }
 
-  generateSdd(options: SDDGenerationOptions): string {
+  async generateSdd(options: SDDGenerationOptions): Promise<string> {
     const { artifactId } = options;
     const tokens = this.parseTokens(artifactId);
     const components = this.extractComponents(artifactId);
     const layout = this.extractLayout(artifactId);
-    const dataModel = this.extractDataModel(artifactId);
+    const dataModel = await this.extractDataModel(artifactId);
 
     const designFacts: DesignFacts = {
       artifactId,
@@ -108,11 +116,11 @@ export class ArtifactSddService {
     return this.generatedSdds.get(artifactId);
   }
 
-  exportSdd(artifactId: string, destination: 'file' | 'inline' = 'file', filename?: string): { destination: string; content?: string; path?: string } {
+  async exportSdd(artifactId: string, destination: 'file' | 'inline' = 'file', filename?: string): Promise<{ destination: string; content?: string; path?: string }> {
     let sdd = this.generatedSdds.get(artifactId);
     if (!sdd) {
       // Auto-generate if not yet produced
-      sdd = this.generateSdd({ artifactId });
+      sdd = await this.generateSdd({ artifactId });
     }
 
     if (destination === 'inline') {

@@ -140,6 +140,8 @@ export class ComponentParser {
 
   private classifyComponent(name: string): ComponentType {
     const n = name.toLowerCase();
+    if (n.includes('chart') || n.includes('graph') || n.includes('plot') || n.includes('trend')) return 'chart';
+    if (n.includes('kpi') || n.includes('metric') || n.includes('stat') || n.includes('counter')) return 'kpi';
     if (n.includes('button') || n.includes('btn')) return 'button';
     if (n.includes('card')) return 'card';
     if (n.includes('modal') || n.includes('dialog')) return 'modal';

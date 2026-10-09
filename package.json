@@ -30,6 +30,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
     "express": "^4.21.2",
+    "mysql2": "^3.24.5",
     "node-html-parser": "^7.0.1",
     "postcss": "^8.5.3",
     "zod": "^3.24.2"

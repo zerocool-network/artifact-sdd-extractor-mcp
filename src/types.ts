@@ -49,6 +49,8 @@ export type ComponentType =
   | 'badge'
   | 'alert'
   | 'layout'
+  | 'chart'
+  | 'kpi'
   | 'custom';
 
 export interface ComponentItem {

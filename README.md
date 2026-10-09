@@ -66,6 +66,25 @@ npm run build
 ### 2. Configuración en Claude Desktop
 Añadir la siguiente entrada en `claude_desktop_config.json`:
 
+#### Opción A: Conexión con base de datos MySQL en vivo
+```json
+{
+  "mcpServers": {
+    "artifact-sdd-extractor": {
+      "command": "node",
+      "args": [
+        "/Volumes/CORSAIR/Proyectos/mcp-artifacts/dist/index.js"
+      ],
+      "env": {
+        "DB_DSN": "mysql://usuario:password@127.0.0.1:3306/mi_base_de_datos",
+        "EXPORT_DIR": "/Volumes/CORSAIR/Proyectos/mcp-artifacts/exports"
+      }
+    }
+  }
+}
+```
+
+#### Opción B: Conexión con SQLite o scripts DDL MySQL (schema.sql)
 ```json
 {
   "mcpServers": {

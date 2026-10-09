@@ -11,7 +11,7 @@ describe('Golden E2E Test (artifact real -> SDD con trazabilidad total)', () => 
     service = new ArtifactSddService(new ArtifactStore());
   });
 
-  it('debe ejecutar el flujo completo de ingesta, parseo, BD, renderizado y exportación sin alucinaciones', () => {
+  it('debe ejecutar el flujo completo de ingesta, parseo, BD, renderizado y exportación sin alucinaciones', async () => {
     const artifactId = 'crm-v1';
 
     // 1. Ingest
@@ -36,14 +36,14 @@ describe('Golden E2E Test (artifact real -> SDD con trazabilidad total)', () => 
     expect(components.some((c) => c.name === 'CustomerTable')).toBe(true);
 
     // 4. Extract data model from schema.sql
-    const dataModel = service.extractDataModel(artifactId);
+    const dataModel = await service.extractDataModel(artifactId);
     expect(dataModel.entities.length).toBe(2);
     expect(dataModel.entities.some((e) => e.table === 'customers')).toBe(true);
     expect(dataModel.entities.some((e) => e.table === 'orders')).toBe(true);
     expect(dataModel.relationships.length).toBe(1);
 
     // 5. Generate SDD
-    const sdd = service.generateSdd({
+    const sdd = await service.generateSdd({
       artifactId,
       title: 'Sistema CRM Empresarial',
       version: '2.0.0',
@@ -70,7 +70,7 @@ describe('Golden E2E Test (artifact real -> SDD con trazabilidad total)', () => 
     expect(sdd).toContain('[SRC-DB: orders.customer_id]');
 
     // 6. Test Determinism (NFR-2)
-    const secondSdd = service.generateSdd({
+    const secondSdd = await service.generateSdd({
       artifactId,
       title: 'Sistema CRM Empresarial',
       version: '2.0.0',
@@ -78,7 +78,7 @@ describe('Golden E2E Test (artifact real -> SDD con trazabilidad total)', () => 
     expect(secondSdd).toBe(sdd);
 
     // 7. Export SDD
-    const exportResult = service.exportSdd(artifactId, 'file', 'crm-v1-golden.md');
+    const exportResult = await service.exportSdd(artifactId, 'file', 'crm-v1-golden.md');
     expect(exportResult.destination).toBe('file');
     expect(exportResult.path).toBeDefined();
     expect(fs.existsSync(exportResult.path!)).toBe(true);
