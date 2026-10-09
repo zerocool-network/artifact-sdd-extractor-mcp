@@ -85,14 +85,19 @@ npm install
 npm run build
 ```
 
-### 2. Instalación Automática en Claude Desktop
-Para registrar automáticamente el servidor en la configuración de Claude Desktop en tu equipo (Mac o Windows):
+### 2. Asistente Interactivo de Terminal (Setup Wizard)
+Para configurar el servidor mediante el asistente interactivo de terminal (TUI) con diagnóstico de entorno, selección de carpetas de exportación y previsualización de cambios:
+```bash
+npm run setup
+```
+
+O si prefieres la instalación directa en modo desatendido:
 ```bash
 npm run install:claude
 ```
-El script detectará tu sistema operativo, creará una copia de respaldo de tu archivo de configuración y registrará `artifact-sdd-extractor` sin alterar tus otros servidores MCP.
+El asistente detectará automáticamente tu sistema operativo (Mac o Windows), creará un respaldo de seguridad de tu configuración previa y registrará `artifact-sdd-extractor` sin alterar tus otros servidores MCP.
 
-Una vez ejecutado, reinicia Claude Desktop (`Cmd+Q` en Mac / `Alt+F4` en Windows).
+Una vez finalizado, reinicia Claude Desktop (`Cmd+Q` en Mac / `Alt+F4` en Windows).
 
 ---
 

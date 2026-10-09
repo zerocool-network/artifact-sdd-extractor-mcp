@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "install:claude": "node scripts/install-claude.js"
+    "install:claude": "node scripts/install-claude.js",
+    "setup": "node scripts/setup-wizard.js"
   },
   "keywords": [
     "mcp",
