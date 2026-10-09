@@ -1,4 +1,10 @@
-export type EvidenceType = 'SRC-CODE' | 'SRC-DB' | 'SIN-FUENTE';
+export type EvidenceType =
+  | 'SRC-CODE'
+  | 'SRC-DB'
+  | 'SRC-FILE'
+  | 'SRC-DATA'
+  | 'SRC-API'
+  | 'SIN-FUENTE';
 
 export interface ArtifactFile {
   path: string;

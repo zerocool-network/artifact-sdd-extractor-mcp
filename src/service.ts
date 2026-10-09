@@ -5,6 +5,7 @@ import { CssTokenParser, defaultCssTokenParser } from './parser/css-parser.js';
 import { ComponentParser, defaultComponentParser } from './parser/component-parser.js';
 import { LayoutParser, defaultLayoutParser } from './parser/layout-parser.js';
 import { DbClient, DbIntrospector } from './db/client.js';
+import { DatasetParser } from './parser/dataset-parser.js';
 import { SddEngine, defaultSddEngine } from './sdd/engine.js';
 import {
   ArtifactFile,
@@ -81,7 +82,7 @@ export class ArtifactSddService {
       relationships?: TableRelationship[];
     }
   ): Promise<DataModel> {
-    // 1. If entities were passed directly by Claude (e.g. from Tabularis or conversation context)
+    // 1. If entities were passed directly by Claude (e.g. from Tabularis, APIs, or conversation context)
     if (options?.entities && options.entities.length > 0) {
       return {
         entities: options.entities,
@@ -89,9 +90,30 @@ export class ArtifactSddService {
       };
     }
 
-    // 2. If schema.sql was ingested inside the artifact files, load it automatically into db
+    const discoveredEntities: DataEntity[] = [];
+    const discoveredRelationships: TableRelationship[] = [...(options?.relationships || [])];
+
+    // 2. Extract from ingested files if present (CSV, JSON, SQL)
     if (this.store.hasArtifact(artifactId)) {
       const files = this.store.getSource(artifactId);
+
+      // 2.1 CSV Files (e.g. exported from Excel, spreadsheet uploads)
+      for (const file of files) {
+        if (file.path.endsWith('.csv')) {
+          const csvEntity = DatasetParser.parseCsv(file.path, file.content);
+          if (csvEntity) discoveredEntities.push(csvEntity);
+        }
+      }
+
+      // 2.2 JSON Files (data exports, JSON payloads)
+      for (const file of files) {
+        if (file.path.endsWith('.json') && !file.path.includes('package.json') && !file.path.includes('tsconfig')) {
+          const jsonEntities = DatasetParser.parseJson(file.path, file.content);
+          discoveredEntities.push(...jsonEntities);
+        }
+      }
+
+      // 2.3 SQL Files inside the artifact
       const sqlFile = files.find(f => f.path.endsWith('.sql'));
       if (sqlFile && !options?.schemaSql) {
         options = { ...options, schemaSql: sqlFile.content };
@@ -102,19 +124,21 @@ export class ArtifactSddService {
     if (options?.schemaSql && (options.schemaSql.includes('ENGINE=') || options.schemaSql.includes('AUTO_INCREMENT'))) {
       const parsed = DbIntrospector.parseMysqlDdl(options.schemaSql);
       if (parsed.entities.length > 0) {
-        return parsed;
+        discoveredEntities.push(...parsed.entities);
+        discoveredRelationships.push(...parsed.relationships);
       }
     }
 
     // 4. If a live database or schemaSql was configured, introspect it
-    if (options?.dbDsn || config.dbDsn || options?.schemaSql) {
+    if ((options?.dbDsn || config.dbDsn || options?.schemaSql) && discoveredEntities.length === 0) {
       try {
         const client = this.getOrCreateDbClient(artifactId, options?.dbDsn, options?.schemaSql);
         if (client.hasConnection()) {
           const introspector = new DbIntrospector(client);
           const result = await introspector.introspectSchema();
           if (result.entities.length > 0) {
-            return result;
+            discoveredEntities.push(...result.entities);
+            discoveredRelationships.push(...result.relationships);
           }
         }
       } catch (err) {
@@ -122,19 +146,41 @@ export class ArtifactSddService {
       }
     }
 
-    // 5. Fallback sin BD externa: Extraer entidades de datos directamente de las interfaces TypeScript del artifact
+    // 5. Datasets and mock data arrays embedded in code (e.g. const sales = [...])
     if (this.store.hasArtifact(artifactId)) {
       const files = this.store.getSource(artifactId);
+      for (const file of files) {
+        const mockEntities = DatasetParser.parseMockDatasetsFromCode(file);
+        for (const me of mockEntities) {
+          if (!discoveredEntities.some(e => e.table === me.table)) {
+            discoveredEntities.push(me);
+          }
+        }
+      }
+
+      // 6. TypeScript interfaces / types in code
       const codeEntities = this.extractEntitiesFromArtifactCode(files);
-      if (codeEntities.length > 0) {
-        return {
-          entities: codeEntities,
-          relationships: [],
-        };
+      for (const ce of codeEntities) {
+        if (!discoveredEntities.some(e => e.table === ce.table)) {
+          discoveredEntities.push(ce);
+        }
       }
     }
 
-    return { entities: [], relationships: [] };
+    // Deduplicate entities by table name
+    const uniqueEntities: DataEntity[] = [];
+    const seen = new Set<string>();
+    for (const ent of discoveredEntities) {
+      if (!seen.has(ent.table)) {
+        seen.add(ent.table);
+        uniqueEntities.push(ent);
+      }
+    }
+
+    return {
+      entities: uniqueEntities,
+      relationships: discoveredRelationships,
+    };
   }
 
   private extractEntitiesFromArtifactCode(files: ArtifactFile[]): DataEntity[] {
@@ -142,7 +188,7 @@ export class ArtifactSddService {
     const seen = new Set<string>();
 
     for (const file of files) {
-      if (file.path.endsWith('.css')) continue;
+      if (file.path.endsWith('.css') || file.path.endsWith('.json') || file.path.endsWith('.csv')) continue;
 
       const interfaceRegex = /(?:export\s+)?(?:interface|type)\s+([A-Z][a-zA-Z0-9_]*)(?:Props)?\s*(?:=\s*)?{([^}]+)}/g;
 
@@ -171,7 +217,7 @@ export class ArtifactSddService {
                 type: colType.toUpperCase() || 'TEXT',
                 nullable: parts[0].includes('?'),
                 isPrimaryKey: colName.toLowerCase() === 'id',
-                evidence: `[SRC-DB: ${tableName}.${colName}]`,
+                evidence: `[SRC-CODE: ${file.path}:${colName}]`,
               });
             }
           }
@@ -182,7 +228,7 @@ export class ArtifactSddService {
             table: tableName,
             columns,
             relationships: [],
-            evidence: `[SRC-DB: ${tableName}]`,
+            evidence: `[SRC-CODE: ${file.path}:${tableName}]`,
           });
         }
       }

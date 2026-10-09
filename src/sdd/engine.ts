@@ -105,6 +105,9 @@ Este documento describe formalmente la arquitectura, interfaz, modelo de datos y
 Cada dato contenido en esta especificación cuenta con una etiqueta de origen estricta:
 - \`[SRC-CODE: archivo:línea]\`: Hecho verificado extraído directamente del código fuente del artifact.
 - \`[SRC-DB: tabla.columna]\`: Hecho verificado extraído directamente de la base de datos de verdad.
+- \`[SRC-FILE: archivo:columna]\`: Hecho verificado extraído de archivos CSV, JSON o fuentes documentales anexas.
+- \`[SRC-DATA: dataset.campo]\`: Hecho verificado extraído de datasets o mock data embebidos en el artifact.
+- \`[SRC-API: origen.campo]\`: Hecho verificado obtenido vía APIs externas o herramientas MCP auxiliares.
 - \`[SIN FUENTE]\`: Dato no presente en ninguna fuente analizada. Jamás se inventa o alucina un valor; queda registrado en el **Anexo A: Vacíos de Información**.`;
   }
 
@@ -277,7 +280,8 @@ Actualmente no hay tablas conectadas para este artifact. Configure \`DB_DSN\` o 
         const pk = c.isPrimaryKey ? 'PK' : '';
         const fk = c.references ? 'FK' : '';
         const tag = pk || fk ? `"${pk || fk}"` : '';
-        erDiagram += `        ${c.type || 'text'} ${c.name} ${tag}\n`;
+        const cleanType = (c.type || 'string').replace(/[\(\),\s]/g, '_').toLowerCase();
+        erDiagram += `        ${cleanType} ${c.name} ${tag}\n`;
       }
       erDiagram += `    }\n`;
     }

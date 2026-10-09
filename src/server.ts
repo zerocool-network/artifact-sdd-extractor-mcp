@@ -183,10 +183,10 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
   // Tool 5: extract_data_model
   server.tool(
     'extract_data_model',
-    'Introspecciona el modelo de datos (entidades, tipos, columnas, relaciones) a partir de los datos pasados por el cliente, archivo DDL o interfaces del código.',
+    'Introspecciona el modelo de datos (entidades, tipos, columnas, relaciones) a partir de archivos CSV/JSON, datasets o mock data en código, otros MCPs o esquemas SQL.',
     {
       artifact_id: z.string().describe('Identificador del artifact'),
-      entities: z.array(z.any()).optional().describe('Entidades y columnas ya obtenidas por el cliente (ej: vía Tabularis)'),
+      entities: z.array(z.any()).optional().describe('Entidades y columnas obtenidas por el cliente (ej: vía otros MCPs, APIs o contexto)'),
       schema_sql: z.string().optional().describe('Sentencias DDL SQL opcionales'),
       db_dsn: z.string().optional().describe('Cadena opcional de conexión si se desea introspección directa'),
     },
@@ -234,7 +234,7 @@ export function createMcpServer(service: ArtifactSddService = defaultArtifactSer
       title: z.string().optional().describe('Título personalizado para el SDD'),
       version: z.string().optional().describe('Versión del documento (ej: "1.0.0")'),
       author: z.string().optional().describe('Nombre del autor o equipo'),
-      entities: z.array(z.any()).optional().describe('Entidades de base de datos ya conocidas por el cliente (ej: de Tabularis) para incluir en el SDD'),
+      entities: z.array(z.any()).optional().describe('Entidades de datos conocidas por el cliente (ej: de otros MCPs, APIs o contexto)'),
       strict: z.boolean().optional().describe('Si es true, valida estrictamente que no existan tablas técnicas sin evidencia'),
     },
     async ({ artifact_id, title, version, author, entities, strict }) => {

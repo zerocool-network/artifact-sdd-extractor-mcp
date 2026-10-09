@@ -4,6 +4,9 @@ export interface AuditReport {
   totalClaims: number;
   codeEvidencedClaims: number;
   dbEvidencedClaims: number;
+  fileEvidencedClaims?: number;
+  dataEvidencedClaims?: number;
+  apiEvidencedClaims?: number;
   unverifiedGapsCount: number;
   complianceRate: number; // 0 to 100%
   violations: string[];
@@ -36,17 +39,23 @@ export class AntiHallucinationValidator {
 
   /**
    * Scans markdown text to verify that every technical claim or specification item
-   * includes a valid evidence citation [SRC-CODE: ...], [SRC-DB: ...], or [SIN FUENTE].
+   * includes a valid evidence citation [SRC-CODE: ...], [SRC-DB: ...], [SRC-FILE: ...], [SRC-DATA: ...], [SRC-API: ...] or [SIN FUENTE].
    */
   auditDocument(markdown: string): AuditReport {
     const lines = markdown.split(/\r?\n/);
     let codeCount = 0;
     let dbCount = 0;
+    let fileCount = 0;
+    let dataCount = 0;
+    let apiCount = 0;
     let gapsCount = 0;
     const violations: string[] = [];
 
     const srcCodeRegex = /\[SRC-CODE:[^\]]+\]/g;
     const srcDbRegex = /\[SRC-DB:[^\]]+\]/g;
+    const srcFileRegex = /\[SRC-FILE:[^\]]+\]/g;
+    const srcDataRegex = /\[SRC-DATA:[^\]]+\]/g;
+    const srcApiRegex = /\[SRC-API:[^\]]+\]/g;
     const sinFuenteRegex = /\[SIN FUENTE\]/g;
 
     for (let i = 0; i < lines.length; i++) {
@@ -57,6 +66,15 @@ export class AntiHallucinationValidator {
 
       const dbMatches = line.match(srcDbRegex);
       if (dbMatches) dbCount += dbMatches.length;
+
+      const fileMatches = line.match(srcFileRegex);
+      if (fileMatches) fileCount += fileMatches.length;
+
+      const dataMatches = line.match(srcDataRegex);
+      if (dataMatches) dataCount += dataMatches.length;
+
+      const apiMatches = line.match(srcApiRegex);
+      if (apiMatches) apiCount += apiMatches.length;
 
       const gapMatches = line.match(sinFuenteRegex);
       if (gapMatches) gapsCount += gapMatches.length;
@@ -85,6 +103,9 @@ export class AntiHallucinationValidator {
         const hasEvidence =
           srcCodeRegex.test(line) ||
           srcDbRegex.test(line) ||
+          srcFileRegex.test(line) ||
+          srcDataRegex.test(line) ||
+          srcApiRegex.test(line) ||
           sinFuenteRegex.test(line) ||
           line.includes('Evidencia') ||
           line.includes('Fuente');
@@ -92,6 +113,9 @@ export class AntiHallucinationValidator {
         // Reset regex state
         srcCodeRegex.lastIndex = 0;
         srcDbRegex.lastIndex = 0;
+        srcFileRegex.lastIndex = 0;
+        srcDataRegex.lastIndex = 0;
+        srcApiRegex.lastIndex = 0;
         sinFuenteRegex.lastIndex = 0;
 
         if (!hasEvidence && line.trim().length > 10) {
@@ -100,14 +124,16 @@ export class AntiHallucinationValidator {
       }
     }
 
-    const totalClaims = codeCount + dbCount + gapsCount;
-    const verifiedClaims = codeCount + dbCount;
+    const totalClaims = codeCount + dbCount + fileCount + dataCount + apiCount + gapsCount;
     const complianceRate = totalClaims > 0 ? (totalClaims / (totalClaims + violations.length)) * 100 : 100;
 
     return {
       totalClaims,
       codeEvidencedClaims: codeCount,
       dbEvidencedClaims: dbCount,
+      fileEvidencedClaims: fileCount,
+      dataEvidencedClaims: dataCount,
+      apiEvidencedClaims: apiCount,
       unverifiedGapsCount: gapsCount,
       complianceRate,
       violations,

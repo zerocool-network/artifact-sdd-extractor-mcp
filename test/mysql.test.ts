@@ -168,6 +168,6 @@ export default function DashboardApp() {
 
     const customer = dataModel.entities.find(e => e.table === 'customer');
     expect(customer?.columns.some(c => c.name === 'email')).toBe(true);
-    expect(customer?.columns.find(c => c.name === 'email')?.evidence).toBe('[SRC-DB: customer.email]');
+    expect(customer?.columns.find(c => c.name === 'email')?.evidence).toBe('[SRC-CODE: App.tsx:email]');
   });
 });

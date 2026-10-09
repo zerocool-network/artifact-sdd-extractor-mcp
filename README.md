@@ -24,7 +24,10 @@ El motor opera bajo una regla de trazabilidad estricta: **ninguna afirmación t�
 
 Cada elemento documentado incluye su identificador de evidencia:
 - `[SRC-CODE: archivo:línea]` — Dato extraído de forma determinista del código fuente (estilo, prop, evento, estado).
-- `[SRC-DB: tabla.columna]` — Dato extraído de la introspección del esquema de datos (tipo, clave primaria, relación foránea).
+- `[SRC-DB: tabla.columna]` — Dato extraído de la introspección de base de datos relacional (MySQL / SQLite).
+- `[SRC-FILE: archivo:columna]` — Dato extraído de hojas CSV, archivos JSON o tablas exportadas desde hojas de cálculo (Excel).
+- `[SRC-DATA: dataset.campo]` — Dato extraído de arrays de datos o mock data embebidos en el código del componente.
+- `[SRC-API: origen.campo]` — Dato estructurado provisto por APIs o servidores MCP complementarios.
 - `[SIN FUENTE]` — Marcador obligatorio cuando un dato no existe en ninguna fuente analizada. El sistema **jamás infiere o supone valores**: deja el marcador y lo traslada al **Anexo A (Vacíos de Información)** para su definición con los responsables del proyecto.
 
 ---
@@ -37,7 +40,8 @@ artifact-sdd-extractor-mcp
  │    ├── parser/
  │    │    ├── css-parser.ts        # Extractor AST (PostCSS) de design tokens con línea exacta
  │    │    ├── component-parser.ts  # Inventario de componentes, props, variantes, KPIs y charts
- │    │    └── layout-parser.ts     # Grids, Flexbox, media queries y comportamiento responsivo
+ │    │    ├── layout-parser.ts     # Grids, Flexbox, media queries y comportamiento responsivo
+ │    │    └── dataset-parser.ts    # Inferencia de esquemas para CSV, JSON y mock data en código
  │    ├── db/
  │    │    ├── client.ts            # Conexión MySQL / SQLite e introspección de esquema
  │    │    └── guard.ts             # SqlGuard (Filtro estricto de solo lectura: SELECT / PRAGMA)
@@ -47,8 +51,9 @@ artifact-sdd-extractor-mcp
  │    ├── server.ts                 # Servidor MCP (Tools y Resources según especificación)
  │    └── index.ts                  # CLI ejecutable con soporte stdio y streamable HTTP/SSE
  ├── scripts/
- │    └── install-claude.js         # Instalador automatizado para entornos Claude Desktop
- └── test/                          # Batería de pruebas automatizadas (>80% cobertura)
+ │    ├── setup-wizard.js           # Asistente interactivo de terminal para Claude Desktop
+ │    └── install-claude.js         # Instalador directo automatizado
+ └── test/                          # Batería de pruebas automatizadas (>85% cobertura)
 ```
 
 ---
@@ -61,8 +66,8 @@ artifact-sdd-extractor-mcp
 | `parse_design_tokens` | `artifact_id` | `tokens[]` | Extrae colores, tipografía, espaciado y media queries con `[SRC-CODE]` |
 | `extract_component_inventory` | `artifact_id` | `components[]` | Inventario de componentes (botones, tablas, KPIs, gráficos, modales) |
 | `extract_layout` | `artifact_id`, `screen?` | `layout` | Mapeo de sistemas Grid, Flexbox y adaptación responsiva |
-| `extract_data_model` | `artifact_id`, `schema_sql?`, `db_dsn?` | `entities[]`, `relationships[]` | Introspección del esquema relacional (MySQL / SQLite) con `[SRC-DB]` |
-| `generate_sdd` | `artifact_id`, `title?`, `version?`, `strict?` | Markdown | Renderiza el SDD con 14 secciones fijas y diagramas Mermaid |
+| `extract_data_model` | `artifact_id`, `entities?`, `schema_sql?`, `db_dsn?` | `entities[]`, `relationships[]` | Introspección universal: CSV, JSON, mock data en código, otros MCPs o SQL |
+| `generate_sdd` | `artifact_id`, `title?`, `version?`, `entities?`, `strict?` | Markdown | Renderiza el SDD con 14 secciones fijas y diagramas Mermaid |
 | `export_sdd` | `artifact_id`, `destination?`, `filename?` | Ruta de archivo o inline | Guarda el SDD en el directorio configurado (`EXPORT_DIR`) |
 
 ### Recursos MCP (Resources)

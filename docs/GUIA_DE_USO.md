@@ -80,6 +80,23 @@ El cliente mostrará el contenido del SDD directamente utilizando el recurso MCP
 
 ---
 
+### Caso 5: Dashboards Basados en Archivos (Excel, CSV, JSON) o Datasets en Código (Sin BD Externa)
+
+Cuando el artifact fue diseñado a partir de hojas de cálculo (Excel / CSV), archivos JSON o datasets y mock data embebidos en el código:
+
+> **Instrucción:**  
+> *"Del artifact que tenemos en pantalla, genera el SDD completo extrayendo el modelo de datos a partir de las fuentes tabulares y datasets en el código, sin requerir base de datos externa. Solicita confirmación antes de guardar."*
+
+**Resultado que produce el motor:**
+- Infiere los tipos de datos de forma determinista (`INTEGER`, `REAL`, `BOOLEAN`, `DATE`, `TEXT`) y genera el diagrama Entidad-Relación Mermaid correspondiente.
+- Asigna trazabilidad exacta según la fuente real:
+  - `[SRC-FILE: archivo.csv:columna]` para hojas tabulares y archivos JSON.
+  - `[SRC-DATA: dataset.campo]` para mock data y arrays de objetos en el código.
+  - `[SRC-API: origen.campo]` para datos provenientes de otros MCPs o APIs complementarias.
+- Produce el diccionario de datos completo y auditable con 100% de evidencia verificada.
+
+---
+
 ## 🔒 Política de Permisos y Autorización Humana
 
 El servidor sigue estrictamente el principio de **autorización previa antes de cualquier mutación de archivos**:
