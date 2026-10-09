@@ -4,3 +4,4 @@ coverage/
 exports/
 .DS_Store
 *.log
+SDD_*.md
